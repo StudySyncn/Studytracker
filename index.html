@@ -138,5 +138,11 @@
             if(Notification.permission !== "denied") Notification.requestPermission();
         };
     </script>
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+        .then(() => console.log("Robot activado"))
+        .catch(err => console.log("Error", err));
+}
+
 </body>
 </html>
