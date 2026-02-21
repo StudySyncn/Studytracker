@@ -1,136 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>StudySync Pro</title>
-  
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#38bdf8">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-      padding: 30px;
-    }
-    h1 { color: #38bdf8; }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border-radius: 8px;
-      border: none;
-    }
-    button {
-      background: #38bdf8;
-      color: black;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    li {
-      background: #1e293b;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-    }
-    .delete {
-      background: red;
-      color: white;
-      margin-left: 10px;
-    }
-  </style>
+    <title>StudySync Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; text-align: center; }
+        h1 { color: #38bdf8; }
+        
+        /* Estilo de la Barra de Progreso */
+        .progress-container { background: #1e293b; border-radius: 10px; height: 20px; width: 100%; margin: 20px 0; }
+        .progress-bar { background: #38bdf8; height: 100%; width: 0%; border-radius: 10px; transition: 0.5s; }
+        
+        input, select, button { padding: 12px; margin: 5px; border-radius: 8px; border: none; }
+        button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; }
+        .tarea-item { background: #1e293b; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .importante { border-left: 5px solid #ef4444; }
+    </style>
 </head>
 <body>
 
-<h1>StudySync Pro 🚀</h1>
+    <h1>StudySync Pro 🚀</h1>
+    
+    <div class="progress-container">
+        <div id="barra" class="progress-bar"></div>
+    </div>
+    <p id="porcentaje">0% completado</p>
 
-<input id="tarea" placeholder="Escribe tu tarea">
-<input id="hora" type="time">
-<button onclick="agregarTarea()">Agregar</button>
+    <input id="tarea" placeholder="Escribe tu tarea">
+    <input id="hora" type="time">
+    <select id="prioridad">
+        <option value="Normal">Normal</option>
+        <option value="Importante">🔥 Importante</option>
+    </select>
+    <button onclick="agregarTarea()">Agregar</button>
 
-<ul id="lista"></ul>
+    <ul id="lista" style="list-style: none; padding: 0;"></ul>
 
-<script>
+    <script>
+        let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
 
-// PEDIR PERMISO DE NOTIFICACIÓN
-if (Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
+        window.onload = () => {
+            actualizarInterfaz();
+            Notification.requestPermission(); 
+        };
 
-// Cargar tareas guardadas
-window.onload = function() {
-  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
-  tareas.forEach(t => mostrarTarea(t.texto, t.hora));
-}
+        function agregarTarea() {
+            let texto = document.getElementById("tarea").value;
+            let hora = document.getElementById("hora").value;
+            let prioridad = document.getElementById("prioridad").value;
+            
+            if (texto === "") return;
 
-// Agregar tarea
-function agregarTarea() {
-  let tarea = document.getElementById("tarea").value;
-  let hora = document.getElementById("hora").value;
-  if (tarea === "") return;
+            let nuevaTarea = { texto, hora, prioridad, completada: false };
+            tareas.push(nuevaTarea);
+            guardarYActualizar();
+            programarNotificacion(texto, hora);
+            document.getElementById("tarea").value = "";
+        }
 
-  guardarTarea(tarea, hora);
-  mostrarTarea(tarea, hora);
+        function programarNotificacion(texto, hora) {
+            if (!hora) return;
+            let [h, m] = hora.split(":");
+            let fechaTarea = new Date();
+            fechaTarea.setHours(h, m, 0);
+            
+            let tiempo = fechaTarea - new Date();
+            if (tiempo > 0) {
+                setTimeout(() => {
+                    new Notification("⏰ StudySync Pro", { body: `¡Es hora de: ${texto}!` });
+                }, tiempo);
+            }
+        }
 
-  document.getElementById("tarea").value = "";
-}
+        function completarTarea(index) {
+            tareas[index].completada = !tareas[index].completada;
+            guardarYActualizar();
+        }
 
-// Mostrar tarea en pantalla
-function mostrarTarea(texto, hora) {
-  let li = document.createElement("li");
-  li.innerHTML = texto + " - " + hora;
+        function eliminarTarea(index) {
+            tareas.splice(index, 1);
+            guardarYActualizar();
+        }
 
-  let btn = document.createElement("button");
-  btn.innerText = "Eliminar";
-  btn.className = "delete";
-  btn.onclick = function() {
-    li.remove();
-    eliminarTarea(texto);
-  };
+        function guardarYActualizar() {
+            localStorage.setItem("tareas", JSON.stringify(tareas));
+            actualizarInterfaz();
+        }
 
-  li.appendChild(btn);
-  document.getElementById("lista").appendChild(li);
+        function actualizarInterfaz() {
+            const lista = document.getElementById("lista");
+            lista.innerHTML = "";
+            let hechas = 0;
 
-  programarNotificacion(texto, hora);
-}
+            tareas.forEach((t, i) => {
+                if (t.completada) hechas++;
+                lista.innerHTML += `
+                    <div class="tarea-item ${t.prioridad === 'Importante' ? 'importante' : ''}">
+                        <span style="${t.completada ? 'text-decoration: line-through; opacity: 0.5;' : ''}">
+                            [${t.prioridad}] ${t.texto} - ${t.hora}
+                        </span>
+                        <div>
+                            <button onclick="completarTarea(${i})">✅</button>
+                            <button onclick="eliminarTarea(${i})" style="background:#ef4444;">X</button>
+                        </div>
+                    </div>`;
+            });
 
-// Guardar en localStorage
-function guardarTarea(texto, hora) {
-  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
-  tareas.push({ texto, hora });
-  localStorage.setItem("tareas", JSON.stringify(tareas));
-}
-
-// Eliminar tarea guardada
-function eliminarTarea(texto) {
-  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
-  tareas = tareas.filter(t => t.texto !== texto);
-  localStorage.setItem("tareas", JSON.stringify(tareas));
-}
-
-// Programar notificación
-function programarNotificacion(texto, hora) {
-  if (!hora) return;
-
-  let ahora = new Date();
-  let [h, m] = hora.split(":");
-  let fechaTarea = new Date();
-  fechaTarea.setHours(h);
-  fechaTarea.setMinutes(m);
-  fechaTarea.setSeconds(0);
-
-  let tiempo = fechaTarea - ahora;
-
-  if (tiempo > 0) {
-    setTimeout(() => {
-      new Notification("⏰ Recordatorio", {
-        body: texto
-      });
-    }, tiempo);
-  }
-}
-
-</script>
-
+            // Lógica de la barra de porcentaje
+            let porc = tareas.length > 0 ? Math.round((hechas / tareas.length) * 100) : 0;
+            document.getElementById("barra").style.width = porc + "%";
+            document.getElementById("porcentaje").innerText = porc + "% completado";
+        }
+    </script>
 </body>
 </html>
