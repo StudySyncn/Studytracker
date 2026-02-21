@@ -1,117 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>StudySync Pro</title>
+    <meta charset="UTF-8">
+    <title>StudySync Pro Ultra</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; padding: 20px; text-align: center; }
-        h1 { color: #38bdf8; }
-        
-        /* Estilo de la Barra de Progreso */
-        .progress-container { background: #1e293b; border-radius: 10px; height: 20px; width: 100%; margin: 20px 0; }
-        .progress-bar { background: #38bdf8; height: 100%; width: 0%; border-radius: 10px; transition: 0.5s; }
-        
-        input, select, button { padding: 12px; margin: 5px; border-radius: 8px; border: none; }
-        button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; }
-        .tarea-item { background: #1e293b; padding: 15px; margin: 10px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .importante { border-left: 5px solid #ef4444; }
+        :root {
+            --primary: #38bdf8;
+            --bg: #070b14;
+            --card: rgba(30, 41, 59, 0.7);
+        }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            padding: 20px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Gráfico Circular */
+        .stats-container { position: relative; width: 150px; height: 150px; margin: 20px; }
+        svg { transform: rotate(-90deg); width: 150px; height: 150px; }
+        circle {
+            fill: none; stroke-width: 12; stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s ease;
+        }
+        .bg-circle { stroke: #1e293b; }
+        .prog-circle { stroke: var(--primary); stroke-dasharray: 440; stroke-dashoffset: 440; }
+        .perc-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem; font-weight: bold;
+        }
+
+        /* Controles */
+        .input-group { 
+            background: var(--card); padding: 20px; border-radius: 20px; 
+            backdrop-filter: blur(10px); width: 100%; max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        input, select, button { 
+            width: 100%; box-sizing: border-box; padding: 12px; margin: 8px 0; 
+            border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white;
+        }
+        button { background: var(--primary); color: #070b14; font-weight: bold; border: none; font-size: 1rem; }
+        button:active { transform: scale(0.98); }
+
+        /* Lista de Tareas */
+        .lista-tareas { width: 100%; max-width: 400px; margin-top: 20px; }
+        .tarea-card {
+            background: var(--card); padding: 15px; border-radius: 15px;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            border-left: 4px solid var(--primary);
+        }
+        .meta { font-size: 0.8rem; color: #94a3b8; }
     </style>
 </head>
 <body>
 
-    <h1>StudySync Pro 🚀</h1>
+    <h1 style="margin-bottom:0;">StudySync <span style="color:var(--primary)">Pro</span></h1>
     
-    <div class="progress-container">
-        <div id="barra" class="progress-bar"></div>
+    <div class="stats-container">
+        <svg>
+            <circle class="bg-circle" cx="75" cy="75" r="70"></circle>
+            <circle id="circulo" class="prog-circle" cx="75" cy="75" r="70"></circle>
+        </svg>
+        <div id="porcentaje" class="perc-text">0%</div>
     </div>
-    <p id="porcentaje">0% completado</p>
 
-    <input id="tarea" placeholder="Escribe tu tarea">
-    <input id="hora" type="time">
-    <select id="prioridad">
-        <option value="Normal">Normal</option>
-        <option value="Importante">🔥 Importante</option>
-    </select>
-    <button onclick="agregarTarea()">Agregar</button>
+    <div class="input-group">
+        <input id="tarea" placeholder="¿Qué vamos a lograr hoy?">
+        <div style="display: flex; gap: 10px;">
+            <input id="hora" type="time">
+            <select id="categoria">
+                <option value="📚 Estudio">📚 Estudio</option>
+                <option value="⚽ Deporte">⚽ Deporte</option>
+                <option value="🎮 Ocio">🎮 Ocio</option>
+                <option value="✨ Otros">✨ Otros</option>
+            </select>
+        </div>
+        <button onclick="agregar()">Agregar a mi plan</button>
+    </div>
 
-    <ul id="lista" style="list-style: none; padding: 0;"></ul>
+    <div id="lista" class="lista-tareas"></div>
 
     <script>
-        let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+        let tareas = JSON.parse(localStorage.getItem("pro_tareas")) || [];
 
-        window.onload = () => {
-            actualizarInterfaz();
-            Notification.requestPermission(); 
-        };
-
-        function agregarTarea() {
-            let texto = document.getElementById("tarea").value;
-            let hora = document.getElementById("hora").value;
-            let prioridad = document.getElementById("prioridad").value;
-            
-            if (texto === "") return;
-
-            let nuevaTarea = { texto, hora, prioridad, completada: false };
-            tareas.push(nuevaTarea);
-            guardarYActualizar();
-            programarNotificacion(texto, hora);
-            document.getElementById("tarea").value = "";
-        }
-
-        function programarNotificacion(texto, hora) {
-            if (!hora) return;
-            let [h, m] = hora.split(":");
-            let fechaTarea = new Date();
-            fechaTarea.setHours(h, m, 0);
-            
-            let tiempo = fechaTarea - new Date();
-            if (tiempo > 0) {
-                setTimeout(() => {
-                    new Notification("⏰ StudySync Pro", { body: `¡Es hora de: ${texto}!` });
-                }, tiempo);
-            }
-        }
-
-        function completarTarea(index) {
-            tareas[index].completada = !tareas[index].completada;
-            guardarYActualizar();
-        }
-
-        function eliminarTarea(index) {
-            tareas.splice(index, 1);
-            guardarYActualizar();
-        }
-
-        function guardarYActualizar() {
-            localStorage.setItem("tareas", JSON.stringify(tareas));
-            actualizarInterfaz();
-        }
-
-        function actualizarInterfaz() {
+        function actualizar() {
             const lista = document.getElementById("lista");
             lista.innerHTML = "";
             let hechas = 0;
 
             tareas.forEach((t, i) => {
-                if (t.completada) hechas++;
+                if (t.done) hechas++;
                 lista.innerHTML += `
-                    <div class="tarea-item ${t.prioridad === 'Importante' ? 'importante' : ''}">
-                        <span style="${t.completada ? 'text-decoration: line-through; opacity: 0.5;' : ''}">
-                            [${t.prioridad}] ${t.texto} - ${t.hora}
-                        </span>
+                    <div class="tarea-card" style="opacity: ${t.done ? 0.6 : 1}">
                         <div>
-                            <button onclick="completarTarea(${i})">✅</button>
-                            <button onclick="eliminarTarea(${i})" style="background:#ef4444;">X</button>
+                            <div style="${t.done ? 'text-decoration:line-through' : ''}">${t.text}</div>
+                            <div class="meta">${t.cat} • ${t.time}</div>
+                        </div>
+                        <div>
+                            <button onclick="check(${i})" style="width:40px; padding:5px; background:#22c55e">✓</button>
+                            <button onclick="del(${i})" style="width:40px; padding:5px; background:#ef4444">X</button>
                         </div>
                     </div>`;
             });
 
-            // Lógica de la barra de porcentaje
-            let porc = tareas.length > 0 ? Math.round((hechas / tareas.length) * 100) : 0;
-            document.getElementById("barra").style.width = porc + "%";
-            document.getElementById("porcentaje").innerText = porc + "% completado";
+            // Lógica del Círculo (440 es el perímetro aprox)
+            let p = tareas.length > 0 ? (hechas / tareas.length) : 0;
+            let offset = 440 - (p * 440);
+            document.getElementById("circulo").style.strokeDashoffset = offset;
+            document.getElementById("porcentaje").innerText = Math.round(p * 100) + "%";
+            
+            localStorage.setItem("pro_tareas", JSON.stringify(tareas));
         }
+
+        function agregar() {
+            const text = document.getElementById("tarea").value;
+            const time = document.getElementById("hora").value;
+            const cat = document.getElementById("categoria").value;
+            if(!text) return;
+            tareas.push({text, time, cat, done: false});
+            document.getElementById("tarea").value = "";
+            actualizar();
+            if(Notification.permission === "granted") {
+                new Notification("¡Tarea guardada!", {body: `Te avisaré a las ${time}`});
+            }
+        }
+
+        function check(i) { tareas[i].done = !tareas[i].done; actualizar(); }
+        function del(i) { tareas.splice(i, 1); actualizar(); }
+
+        window.onload = () => {
+            actualizar();
+            if(Notification.permission !== "denied") Notification.requestPermission();
+        };
     </script>
 </body>
 </html>
