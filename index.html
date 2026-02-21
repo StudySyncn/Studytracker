@@ -4,181 +4,184 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StudySync Ultra 🚀</title>
-    <link rel="manifest" href="manifest.json">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <style>
         :root {
             --bg: #050a18;
             --card: #111b36;
-            --accent: #00d2ff;
-            --study: #bd00ff;
-            --success: #00ff88;
-            --danger: #ff0055;
+            --cyan: #00d2ff;
+            --purple: #bd00ff;
+            --green: #00ff88;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
             color: white;
             margin: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 20px;
+            min-height: 100vh;
         }
 
-        /* Tarjeta Principal Gráfica */
-        .glass-card {
-            width: 100%;
+        /* DISEÑO GRÁFICO DE LA TARJETA */
+        .ultra-card {
+            width: 90%;
             max-width: 420px;
             background: var(--card);
-            border-radius: 35px;
             padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-radius: 35px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
             backdrop-filter: blur(10px);
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            background: linear-gradient(to right, var(--accent), var(--study));
+            font-size: 2.3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--cyan), var(--purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
-
-        /* Botón de Notificaciones con Efecto de Pulso */
-        .btn-notif {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
             margin-bottom: 25px;
-            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+        /* BARRA DE PROGRESO VISUAL */
+        .progress-box {
+            margin-bottom: 25px;
+            text-align: left;
         }
-
-        /* Inputs Modernos */
-        .input-box {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        input, select {
+        .progress-bar-bg {
             background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 18px;
+            height: 14px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%; /* Cambia esto dinámicamente */
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            box-shadow: 0 0 15px var(--cyan);
+            transition: width 0.5s ease;
+        }
+
+        /* INPUTS Y BOTONES */
+        input, select {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 15px;
             border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
             color: white;
             font-size: 16px;
+            box-sizing: border-box;
             outline: none;
-            transition: 0.3s;
         }
 
-        input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
-
-        .btn-save {
-            background: linear-gradient(45deg, var(--accent), var(--study));
-            color: white;
-            border: none;
-            padding: 20px;
+        .btn-ultra {
+            width: 100%;
+            padding: 18px;
             border-radius: 20px;
+            border: none;
+            background: linear-gradient(45deg, var(--cyan), var(--purple));
+            color: white;
             font-weight: bold;
             font-size: 18px;
             cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);
             transition: 0.3s;
         }
 
-        .btn-save:active { transform: scale(0.95); }
+        .btn-ultra:active {
+            transform: scale(0.96);
+        }
 
+        .status-tag {
+            font-size: 12px;
+            color: var(--cyan);
+            margin-bottom: 15px;
+            display: inline-block;
+            border: 1px solid var(--cyan);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="glass-card">
+    <div class="ultra-card">
         <h1>StudySync Ultra 🚀</h1>
         
-        <button class="btn-notif" id="btnPermiso" onclick="activarNotificaciones()">🔔 ACTIVAR ALERTAS</button>
+        <div class="status-tag" onclick="pedirPermiso()">🔔 Toca para activar sistema</div>
 
-        <div class="input-box">
-            <input type="text" id="tarea" placeholder="¿Cuál es tu próximo objetivo?">
-            <div style="display: flex; gap: 10px;">
-                <input type="time" id="hora" style="flex: 1;">
-                <select id="categoria" style="flex: 1;">
-                    <option value="Estudio">📚 Estudio</option>
-                    <option value="Deporte">🏀 Deporte</option>
-                    <option value="Importante">🔥 Importante</option>
-                </select>
+        <div class="progress-box">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <small>Progreso Diario</small>
+                <small id="pct">0%</small>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="barra" class="progress-bar-fill"></div>
             </div>
         </div>
 
-        <button class="btn-save" onclick="guardarTarea()">+ AGREGAR TAREA</button>
+        <div class="form">
+            <input type="text" id="t" placeholder="¿Cuál es el reto de hoy?">
+            <input type="time" id="h">
+            <select id="c">
+                <option value="Estudio">📚 Sesión de Estudio</option>
+                <option value="Deporte">🏀 Entrenamiento</option>
+                <option value="Urgente">🔥 Prioridad Máxima</option>
+            </select>
+            <button class="btn-ultra" onclick="agregar()">+ AGREGAR TAREA</button>
+        </div>
     </div>
 
     <script>
-        // Registro del Robot (Service Worker)
+        // EL CÓDIGO QUE TE FUNCIONÓ ANTES
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                console.log("Sistema Ultra Listo");
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        function pedirPermiso() {
+            Notification.requestPermission().then(p => {
+                if(p === 'granted') alert("¡Sistema Gráfico Activado! ✅");
             });
         }
 
-        // Función para activar notificaciones con permiso del iPad
-        function activarNotificaciones() {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    document.getElementById('btnPermiso').style.display = 'none';
+        function agregar() {
+            const tarea = document.getElementById('t').value;
+            const hora = document.getElementById('h').value;
+            
+            if(!tarea || !hora) return alert("Llena los campos");
+
+            alert("✅ Guardado con éxito: " + tarea);
+            
+            // Simular progreso en la barra
+            document.getElementById('barra').style.width = "40%";
+            document.getElementById('pct').innerText = "40%";
+
+            // Notificación (La misma lógica que te funcionó)
+            if (Notification.permission === "granted") {
+                const [hrs, mins] = hora.split(':');
+                const d = new Date(); d.setHours(hrs, mins, 0);
+                let diff = d - new Date();
+                if (diff < 0) diff += 86400000;
+
+                setTimeout(() => {
                     navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification("¡Modo Ultra Activo! 🚀", {
-                            body: "Recibirás tus notificaciones incluso fuera de la app.",
+                        reg.showNotification("🚀 StudySync Ultra", {
+                            body: "¡Es momento de: " + tarea + "!",
                             icon: "icon-192.png"
                         });
                     });
-                }
-            });
-        }
-
-        function guardarTarea() {
-            const tarea = document.getElementById('tarea').value;
-            const hora = document.getElementById('hora').value;
-            
-            if (!tarea || !hora) return alert("Por favor completa los campos");
-
-            // Programación del aviso
-            const [h, m] = hora.split(":");
-            const fecha = new Date();
-            fecha.setHours(h, m, 0);
-
-            let diff = fecha - new Date();
-            if (diff < 0) diff += 86400000;
-
-            alert(`✅ Tarea guardada: ${tarea}\nTe avisaré en ${Math.round(diff/60000)} minutos.`);
-
-            setTimeout(() => {
-                if (Notification.permission === "granted") {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification("⏰ Recordatorio StudySync", {
-                            body: `Es hora de: ${tarea}`,
-                            icon: "icon-192.png",
-                            badge: "icon-192.png"
-                        });
-                    });
-                }
-            }, diff);
+                }, diff);
+            }
         }
     </script>
 </body>
