@@ -1,4 +1,4 @@
-setTimeout(() => {
+(() => {
     if ('serviceWorker' in navigator && Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then((registration) => {
             registration.active.postMessage({
