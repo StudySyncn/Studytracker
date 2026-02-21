@@ -14,14 +14,14 @@
             --card: #111b36;
             --cyan: #00d2ff;
             --purple: #bd00ff;
+            --red: #ff0055;
             --green: #00ff88;
-            --white: #ffffff;
         }
 
         body {
             font-family: -apple-system, system-ui, sans-serif;
             background-color: var(--bg);
-            color: var(--white);
+            color: white;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -29,63 +29,45 @@
             min-height: 100vh;
         }
 
-        /* DISEÑO GRÁFICO DE LA TARJETA */
+        /* DISEÑO DE LA TARJETA PRINCIPAL */
         .ultra-card {
             width: 100%;
             max-width: 420px;
             background: var(--card);
-            padding: 30px;
+            padding: 25px;
             border-radius: 35px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.7);
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
-            backdrop-filter: blur(10px);
         }
 
         h1 {
-            font-size: 2.3rem;
-            font-weight: 800;
+            font-size: 2.2rem;
             background: linear-gradient(to right, var(--cyan), var(--purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        /* BARRA DE PROGRESO REAL */
-        .progress-box {
-            margin-bottom: 25px;
-            text-align: left;
-        }
-        .progress-bar-bg {
-            background: rgba(255,255,255,0.05);
-            height: 14px;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--cyan), var(--green));
-            box-shadow: 0 0 15px var(--cyan);
-            transition: width 0.5s ease;
-        }
+        /* BARRA DE PROGRESO */
+        .progress-box { margin-bottom: 20px; text-align: left; }
+        .bar-bg { background: rgba(255,255,255,0.05); height: 10px; border-radius: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: 0.5s; }
 
-        /* INPUTS Y BOTONES */
+        /* FORMULARIO */
         input, select {
             width: 100%;
-            padding: 16px;
-            margin-bottom: 12px;
-            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 15px;
             border: 1px solid rgba(255,255,255,0.1);
             background: rgba(0,0,0,0.3);
             color: white;
-            font-size: 16px;
             box-sizing: border-box;
-            outline: none;
+            font-size: 16px;
         }
 
-        .btn-ultra {
+        .btn-add {
             width: 100%;
             padding: 18px;
             border-radius: 20px;
@@ -99,53 +81,41 @@
             margin-bottom: 20px;
         }
 
-        /* LISTA DE TAREAS GRÁFICA */
-        #listaTareas {
-            text-align: left;
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-        }
+        /* LISTA DE TAREAS */
+        #listaTareas { list-style: none; padding: 0; margin-top: 20px; text-align: left; }
 
         .tarea-item {
-            background: rgba(255,255,255,0.03);
-            padding: 18px;
+            background: rgba(255,255,255,0.04);
+            padding: 15px;
             border-radius: 20px;
             margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-left: 5px solid var(--cyan);
-            transition: 0.3s;
+            animation: fadeIn 0.3s ease;
         }
 
-        .tarea-item.completada {
-            opacity: 0.4;
-            border-left-color: var(--green);
-            text-decoration: line-through;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .check-btn {
-            background: var(--green);
+        .info-tarea b { display: block; font-size: 1.1rem; }
+        .info-tarea small { color: #aaa; }
+
+        /* BOTÓN QUITAR (BORRAR) */
+        .btn-quitar {
+            background: var(--red);
             border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            cursor: pointer;
-            color: black;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 12px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
         }
 
-        .status-tag {
-            font-size: 12px;
-            color: var(--cyan);
-            margin-bottom: 15px;
-            display: inline-block;
-            cursor: pointer;
-        }
+        .btn-quitar:active { transform: scale(0.9); }
+
+        .btn-permiso { color: var(--cyan); font-size: 12px; cursor: pointer; margin-bottom: 15px; display: block; }
     </style>
 </head>
 <body>
@@ -153,45 +123,36 @@
     <div class="ultra-card">
         <h1>StudySync Ultra 🚀</h1>
         
-        <div class="status-tag" onclick="pedirPermiso()">🔔 Toca para activar notificaciones</div>
+        <span class="btn-permiso" onclick="pedirPermiso()">🔔 Activar Notificaciones</span>
 
         <div class="progress-box">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                <small>Tu Éxito</small>
-                <small id="pct">0%</small>
-            </div>
-            <div class="progress-bar-bg">
-                <div id="barra" class="progress-bar-fill"></div>
-            </div>
+            <div class="bar-bg"><div id="barra" class="bar-fill"></div></div>
         </div>
 
-        <div class="formulario">
-            <input type="text" id="t" placeholder="¿Cuál es tu próximo reto?">
+        <div class="inputs">
+            <input type="text" id="t" placeholder="¿Qué reto sigue?">
             <input type="time" id="h">
             <select id="c">
-                <option value="Estudio">📚 Sesión de Estudio</option>
-                <option value="Deporte">🏀 Entrenamiento</option>
-                <option value="Urgente">🔥 Prioridad Máxima</option>
+                <option value="Estudio">📚 Estudio</option>
+                <option value="Deporte">🏀 Deporte</option>
             </select>
-            <button class="btn-ultra" onclick="agregar()">+ AGREGAR Y NOTIFICAR</button>
+            <button class="btn-add" onclick="agregar()">+ AGREGAR TAREA</button>
         </div>
 
         <ul id="listaTareas"></ul>
     </div>
 
     <script>
-        let tareas = JSON.parse(localStorage.getItem('studyDB')) || [];
+        let tareas = JSON.parse(localStorage.getItem('study_db')) || [];
 
         window.onload = () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js');
-            }
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
             render();
         };
 
         function pedirPermiso() {
             Notification.requestPermission().then(p => {
-                if(p === 'granted') alert("¡Sistema Ultra Activado! ✅");
+                if(p === 'granted') alert("¡Sistema Notificaciones OK! ✅");
             });
         }
 
@@ -199,18 +160,18 @@
             const texto = document.getElementById('t').value;
             const hora = document.getElementById('h').value;
             const cat = document.getElementById('c').value;
-            
+
             if(!texto || !hora) return alert("Completa los datos");
 
-            const nueva = { id: Date.now(), texto, hora, cat, hecha: false };
+            const nueva = { id: Date.now(), texto, hora, cat };
             tareas.push(nueva);
-            guardarYRender();
-            programarAviso(texto, hora);
+            guardar();
+            programar(texto, hora);
             
             document.getElementById('t').value = "";
         }
 
-        function programarAviso(txt, hr) {
+        function programar(txt, hr) {
             if (Notification.permission === "granted") {
                 const [h, m] = hr.split(':');
                 const d = new Date(); d.setHours(h, m, 0);
@@ -220,47 +181,45 @@
                 setTimeout(() => {
                     navigator.serviceWorker.ready.then(reg => {
                         reg.showNotification("🚀 StudySync Ultra", {
-                            body: "¡Momento de: " + txt + "!",
-                            icon: "icon-192.png",
-                            vibrate: [200, 100, 200]
+                            body: "¡Hora de: " + txt + "!",
+                            icon: "icon-192.png"
                         });
                     });
                 }, diff);
             }
         }
 
-        function toggleTarea(id) {
-            tareas = tareas.map(t => t.id === id ? {...t, hecha: !t.hecha} : t);
-            guardarYRender();
+        // FUNCIÓN PARA QUITAR TAREA
+        function quitarTarea(id) {
+            tareas = tareas.filter(t => t.id !== id);
+            guardar();
         }
 
-        function guardarYRender() {
-            localStorage.setItem('studyDB', JSON.stringify(tareas));
+        function guardar() {
+            localStorage.setItem('study_db', JSON.stringify(tareas));
             render();
         }
 
         function render() {
             const lista = document.getElementById('listaTareas');
             lista.innerHTML = "";
-            let hechas = 0;
-
+            
             tareas.forEach(t => {
-                if(t.hecha) hechas++;
                 const li = document.createElement('li');
-                li.className = `tarea-item ${t.hecha ? 'completada' : ''}`;
+                li.className = "tarea-item";
                 li.innerHTML = `
-                    <div>
-                        <b>${t.texto}</b><br>
+                    <div class="info-tarea">
+                        <b>${t.texto}</b>
                         <small>🕒 ${t.hora} | ${t.cat}</small>
                     </div>
-                    <button class="check-btn" onclick="toggleTarea(${t.id})">✓</button>
+                    <button class="btn-quitar" onclick="quitarTarea(${t.id})">Quitar</button>
                 `;
                 lista.appendChild(li);
             });
 
-            const porc = tareas.length ? Math.round((hechas / tareas.length) * 100) : 0;
-            document.getElementById('barra').style.width = porc + "%";
-            document.getElementById('pct').innerText = porc + "%";
+            // Actualizar barra de ejemplo
+            const barra = document.getElementById('barra');
+            barra.style.width = tareas.length > 0 ? "50%" : "0%";
         }
     </script>
 </body>
