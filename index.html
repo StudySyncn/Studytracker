@@ -1,22 +1,131 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>StudyTracker</title>
+  <title>StudySync Pro</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 30px;
+    }
+    h1 { color: #38bdf8; }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background: #38bdf8;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    li {
+      background: #1e293b;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    .delete {
+      background: red;
+      color: white;
+      margin-left: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Calculadora de Promedio</h1>
-  <input id="nota1" type="number">
-  <input id="nota2" type="number">
-  <button onclick="calcular()">Calcular</button>
-  <p id="resultado"></p>
 
-  <script>
-    function calcular() {
-      let n1 = parseFloat(document.getElementById("nota1").value);
-      let n2 = parseFloat(document.getElementById("nota2").value);
-      let promedio = (n1 + n2) / 2;
-      document.getElementById("resultado").innerText = "Promedio: " + promedio;
-    }
-  </script>
+<h1>StudySync Pro 🚀</h1>
+
+<input id="tarea" placeholder="Escribe tu tarea">
+<input id="hora" type="time">
+<button onclick="agregarTarea()">Agregar</button>
+
+<ul id="lista"></ul>
+
+<script>
+
+// PEDIR PERMISO DE NOTIFICACIÓN
+if (Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+// Cargar tareas guardadas
+window.onload = function() {
+  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+  tareas.forEach(t => mostrarTarea(t.texto, t.hora));
+}
+
+// Agregar tarea
+function agregarTarea() {
+  let tarea = document.getElementById("tarea").value;
+  let hora = document.getElementById("hora").value;
+  if (tarea === "") return;
+
+  guardarTarea(tarea, hora);
+  mostrarTarea(tarea, hora);
+
+  document.getElementById("tarea").value = "";
+}
+
+// Mostrar tarea en pantalla
+function mostrarTarea(texto, hora) {
+  let li = document.createElement("li");
+  li.innerHTML = texto + " - " + hora;
+
+  let btn = document.createElement("button");
+  btn.innerText = "Eliminar";
+  btn.className = "delete";
+  btn.onclick = function() {
+    li.remove();
+    eliminarTarea(texto);
+  };
+
+  li.appendChild(btn);
+  document.getElementById("lista").appendChild(li);
+
+  programarNotificacion(texto, hora);
+}
+
+// Guardar en localStorage
+function guardarTarea(texto, hora) {
+  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+  tareas.push({ texto, hora });
+  localStorage.setItem("tareas", JSON.stringify(tareas));
+}
+
+// Eliminar tarea guardada
+function eliminarTarea(texto) {
+  let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+  tareas = tareas.filter(t => t.texto !== texto);
+  localStorage.setItem("tareas", JSON.stringify(tareas));
+}
+
+// Programar notificación
+function programarNotificacion(texto, hora) {
+  if (!hora) return;
+
+  let ahora = new Date();
+  let [h, m] = hora.split(":");
+  let fechaTarea = new Date();
+  fechaTarea.setHours(h);
+  fechaTarea.setMinutes(m);
+  fechaTarea.setSeconds(0);
+
+  let tiempo = fechaTarea - ahora;
+
+  if (tiempo > 0) {
+    setTimeout(() => {
+      new Notification("⏰ Recordatorio", {
+        body: texto
+      });
+    }, tiempo);
+  }
+}
+
+</script>
+
 </body>
 </html>
