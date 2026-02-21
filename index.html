@@ -1,10 +1,114 @@
-(() => {
-    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then((registration) => {
-            registration.active.postMessage({
-                title: "🚀 StudySync Ultra",
-                body: "¡Es hora de: " + texto + "!"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StudySync Ultra 🚀</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        :root {
+            --bg: #050a18; --card: #111b36; --accent: #00d2ff;
+            --sport: #ffae00; --study: #bd00ff; --urgent: #ff0055; --success: #00ff88;
+        }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .main-card { width: 100%; max-width: 500px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        h1 { background: linear-gradient(to right, var(--accent), var(--study)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        
+        /* Barra de Progreso */
+        .bar-bg { background: rgba(255,255,255,0.05); border-radius: 20px; height: 18px; overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--success)); box-shadow: 0 0 15px var(--accent); transition: width 0.8s ease; }
+
+        /* Inputs y Botones */
+        .input-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        input, select, button { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 15px; border-radius: 15px; font-size: 16px; }
+        .btn-add { background: linear-gradient(45deg, var(--accent), var(--study)); border: none; font-weight: bold; }
+
+        /* Lista */
+        .tarea-item { background: rgba(255,255,255,0.03); margin-top: 15px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid var(--accent); width: 100%; max-width: 500px; }
+        .cat-deporte { border-left-color: var(--sport); }
+        .cat-estudio { border-left-color: var(--study); }
+        .cat-urgente { border-left-color: var(--urgent); }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <h1>StudySync Ultra 🚀</h1>
+        <div style="display:flex; justify-content:space-between;"><span>Tu Progreso</span><span id="txt-p">0%</span></div>
+        <div class="bar-bg"><div id="barra" class="bar-fill"></div></div>
+        <div class="input-group">
+            <input id="tarea" placeholder="¿Qué vamos a hacer?">
+            <div style="display:flex; gap:10px;">
+                <input id="hora" type="time" style="flex:1;">
+                <select id="cat" style="flex:1;">
+                    <option value="Normal">🏠 Normal</option>
+                    <option value="Estudio">📚 Estudio</option>
+                    <option value="Deporte">🏀 Deporte</option>
+                    <option value="Urgente">🔥 Urgente</option>
+                </select>
+            </div>
+            <button class="btn-add" onclick="agregar()">+ Agregar Tarea</button>
+        </div>
+    </div>
+    <div id="lista" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+
+    <script>
+        let tareas = JSON.parse(localStorage.getItem("db_v3")) || [];
+        
+        window.onload = () => {
+            render();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').then(() => console.log("Robot activo"));
+            }
+            Notification.requestPermission();
+        };
+
+        function agregar() {
+            const txt = document.getElementById("tarea").value;
+            const hr = document.getElementById("hora").value;
+            const c = document.getElementById("cat").value;
+            if (!txt) return;
+
+            const t = { id: Date.now(), txt, hr, c, done: false };
+            tareas.push(t);
+            save();
+            if(hr) programar(t);
+            document.getElementById("tarea").value = "";
+        }
+
+        function programar(t) {
+            const [h, m] = t.hr.split(":");
+            const d = new Date(); d.setHours(h, m, 0);
+            const diff = d - new Date();
+            if (diff > 0) {
+                setTimeout(() => {
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.active.postMessage({ title: "⏰ StudySync Ultra", body: t.txt });
+                        });
+                    }
+                }, diff);
+            }
+        }
+
+        function save() { localStorage.setItem("db_v3", JSON.stringify(tareas)); render(); }
+        function render() {
+            const l = document.getElementById("lista"); l.innerHTML = "";
+            let doneCount = 0;
+            tareas.forEach(t => {
+                if(t.done) doneCount++;
+                const div = document.createElement("div");
+                div.className = `tarea-item cat-${t.c.toLowerCase()}`;
+                div.innerHTML = `<div style="${t.done?'opacity:0.4;text-decoration:line-through':''}"><b>${t.txt}</b><br><small>${t.hr} | ${t.c}</small></div>
+                <div><button onclick="completar(${t.id})">✓</button><button onclick="borrar(${t.id})">✕</button></div>`;
+                l.appendChild(div);
             });
-        });
-    }
-}, tiempo);
+            const p = tareas.length > 0 ? Math.round((doneCount/tareas.length)*100) : 0;
+            document.getElementById("barra").style.width = p + "%";
+            document.getElementById("txt-p").innerText = p + "%";
+        }
+        function completar(id) { tareas = tareas.map(t=>t.id===id?{...t,done:!t.done}:t); save(); }
+        function borrar(id) { tareas = tareas.filter(t=>t.id!==id); save(); }
+    </script>
+</body>
+</html>
