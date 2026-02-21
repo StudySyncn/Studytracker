@@ -15,22 +15,23 @@
             --cyan: #00d2ff;
             --purple: #bd00ff;
             --green: #00ff88;
+            --white: #ffffff;
         }
 
         body {
             font-family: -apple-system, system-ui, sans-serif;
             background-color: var(--bg);
-            color: white;
+            color: var(--white);
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
         }
 
         /* DISEÑO GRÁFICO DE LA TARJETA */
         .ultra-card {
-            width: 90%;
+            width: 100%;
             max-width: 420px;
             background: var(--card);
             padding: 30px;
@@ -47,10 +48,10 @@
             background: linear-gradient(to right, var(--cyan), var(--purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
-        /* BARRA DE PROGRESO VISUAL */
+        /* BARRA DE PROGRESO REAL */
         .progress-box {
             margin-bottom: 25px;
             text-align: left;
@@ -64,7 +65,7 @@
         }
         .progress-bar-fill {
             height: 100%;
-            width: 0%; /* Cambia esto dinámicamente */
+            width: 0%;
             background: linear-gradient(90deg, var(--cyan), var(--green));
             box-shadow: 0 0 15px var(--cyan);
             transition: width 0.5s ease;
@@ -74,7 +75,7 @@
         input, select {
             width: 100%;
             padding: 16px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border-radius: 18px;
             border: 1px solid rgba(255,255,255,0.1);
             background: rgba(0,0,0,0.3);
@@ -95,11 +96,47 @@
             font-size: 18px;
             cursor: pointer;
             box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);
+            margin-bottom: 20px;
+        }
+
+        /* LISTA DE TAREAS GRÁFICA */
+        #listaTareas {
+            text-align: left;
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .tarea-item {
+            background: rgba(255,255,255,0.03);
+            padding: 18px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--cyan);
             transition: 0.3s;
         }
 
-        .btn-ultra:active {
-            transform: scale(0.96);
+        .tarea-item.completada {
+            opacity: 0.4;
+            border-left-color: var(--green);
+            text-decoration: line-through;
+        }
+
+        .check-btn {
+            background: var(--green);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            color: black;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .status-tag {
@@ -107,9 +144,7 @@
             color: var(--cyan);
             margin-bottom: 15px;
             display: inline-block;
-            border: 1px solid var(--cyan);
-            padding: 5px 15px;
-            border-radius: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -118,11 +153,11 @@
     <div class="ultra-card">
         <h1>StudySync Ultra 🚀</h1>
         
-        <div class="status-tag" onclick="pedirPermiso()">🔔 Toca para activar sistema</div>
+        <div class="status-tag" onclick="pedirPermiso()">🔔 Toca para activar notificaciones</div>
 
         <div class="progress-box">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                <small>Progreso Diario</small>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <small>Tu Éxito</small>
                 <small id="pct">0%</small>
             </div>
             <div class="progress-bar-bg">
@@ -130,58 +165,102 @@
             </div>
         </div>
 
-        <div class="form">
-            <input type="text" id="t" placeholder="¿Cuál es el reto de hoy?">
+        <div class="formulario">
+            <input type="text" id="t" placeholder="¿Cuál es tu próximo reto?">
             <input type="time" id="h">
             <select id="c">
                 <option value="Estudio">📚 Sesión de Estudio</option>
                 <option value="Deporte">🏀 Entrenamiento</option>
                 <option value="Urgente">🔥 Prioridad Máxima</option>
             </select>
-            <button class="btn-ultra" onclick="agregar()">+ AGREGAR TAREA</button>
+            <button class="btn-ultra" onclick="agregar()">+ AGREGAR Y NOTIFICAR</button>
         </div>
+
+        <ul id="listaTareas"></ul>
     </div>
 
     <script>
-        // EL CÓDIGO QUE TE FUNCIONÓ ANTES
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        let tareas = JSON.parse(localStorage.getItem('studyDB')) || [];
+
+        window.onload = () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js');
+            }
+            render();
+        };
 
         function pedirPermiso() {
             Notification.requestPermission().then(p => {
-                if(p === 'granted') alert("¡Sistema Gráfico Activado! ✅");
+                if(p === 'granted') alert("¡Sistema Ultra Activado! ✅");
             });
         }
 
         function agregar() {
-            const tarea = document.getElementById('t').value;
+            const texto = document.getElementById('t').value;
             const hora = document.getElementById('h').value;
+            const cat = document.getElementById('c').value;
             
-            if(!tarea || !hora) return alert("Llena los campos");
+            if(!texto || !hora) return alert("Completa los datos");
 
-            alert("✅ Guardado con éxito: " + tarea);
+            const nueva = { id: Date.now(), texto, hora, cat, hecha: false };
+            tareas.push(nueva);
+            guardarYRender();
+            programarAviso(texto, hora);
             
-            // Simular progreso en la barra
-            document.getElementById('barra').style.width = "40%";
-            document.getElementById('pct').innerText = "40%";
+            document.getElementById('t').value = "";
+        }
 
-            // Notificación (La misma lógica que te funcionó)
+        function programarAviso(txt, hr) {
             if (Notification.permission === "granted") {
-                const [hrs, mins] = hora.split(':');
-                const d = new Date(); d.setHours(hrs, mins, 0);
+                const [h, m] = hr.split(':');
+                const d = new Date(); d.setHours(h, m, 0);
                 let diff = d - new Date();
                 if (diff < 0) diff += 86400000;
 
                 setTimeout(() => {
                     navigator.serviceWorker.ready.then(reg => {
                         reg.showNotification("🚀 StudySync Ultra", {
-                            body: "¡Es momento de: " + tarea + "!",
-                            icon: "icon-192.png"
+                            body: "¡Momento de: " + txt + "!",
+                            icon: "icon-192.png",
+                            vibrate: [200, 100, 200]
                         });
                     });
                 }, diff);
             }
+        }
+
+        function toggleTarea(id) {
+            tareas = tareas.map(t => t.id === id ? {...t, hecha: !t.hecha} : t);
+            guardarYRender();
+        }
+
+        function guardarYRender() {
+            localStorage.setItem('studyDB', JSON.stringify(tareas));
+            render();
+        }
+
+        function render() {
+            const lista = document.getElementById('listaTareas');
+            lista.innerHTML = "";
+            let hechas = 0;
+
+            tareas.forEach(t => {
+                if(t.hecha) hechas++;
+                const li = document.createElement('li');
+                li.className = `tarea-item ${t.hecha ? 'completada' : ''}`;
+                li.innerHTML = `
+                    <div>
+                        <b>${t.texto}</b><br>
+                        <small>🕒 ${t.hora} | ${t.cat}</small>
+                    </div>
+                    <button class="check-btn" onclick="toggleTarea(${t.id})">✓</button>
+                `;
+                lista.appendChild(li);
+            });
+
+            const porc = tareas.length ? Math.round((hechas / tareas.length) * 100) : 0;
+            document.getElementById('barra').style.width = porc + "%";
+            document.getElementById('pct').innerText = porc + "%";
         }
     </script>
 </body>
