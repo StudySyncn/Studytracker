@@ -1,1 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>StudyTracker</title>
+</head>
+<body>
+  <h1>Calculadora de Promedio</h1>
+  <input id="nota1" type="number">
+  <input id="nota2" type="number">
+  <button onclick="calcular()">Calcular</button>
+  <p id="resultado"></p>
 
+  <script>
+    function calcular() {
+      let n1 = parseFloat(document.getElementById("nota1").value);
+      let n2 = parseFloat(document.getElementById("nota2").value);
+      let promedio = (n1 + n2) / 2;
+      document.getElementById("resultado").innerText = "Promedio: " + promedio;
+    }
+  </script>
+</body>
+</html>
